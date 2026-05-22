@@ -7,10 +7,15 @@ import {
   ImageIcon,
   History,
   Upload,
+  LoaderCircle,
 } from "lucide-react";
 
 export default function HomePage() {
   const [preview, setPreview] = useState<string | null>(null);
+
+  const [generated, setGenerated] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(false);
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,8 +27,35 @@ export default function HomePage() {
     setPreview(imageUrl);
   };
 
+  const generateImage = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: preview,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.image) {
+        setGenerated(`data:image/png;base64,${data.image}`);
+      }
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[#F5F5F3] text-[#111111] pb-28">
+    <main className="min-h-screen bg-[#F5F5F3] text-[#111111] pb-32">
 
       {/* HERO */}
       <section className="px-6 pt-10">
@@ -71,43 +103,51 @@ export default function HomePage() {
             )}
           </label>
 
-        </div>
-      </section>
-
-      {/* ACTIONS */}
-      <section className="px-6 mt-8">
-        <div className="grid grid-cols-1 gap-4">
-
-          <button className="bg-black text-white rounded-[28px] p-6 text-left transition active:scale-[0.98]">
-            <p className="text-sm text-neutral-400 mb-2">
-              MÓDULO 01
-            </p>
-
-            <h2 className="text-2xl font-semibold mb-2">
-              Generar Ficha
-            </h2>
-
-            <p className="text-neutral-400 text-sm leading-relaxed">
-              Crear ficha técnica visual premium.
-            </p>
-          </button>
-
-          <button className="bg-white rounded-[28px] p-6 text-left shadow-sm transition active:scale-[0.98]">
-            <p className="text-sm text-neutral-400 mb-2">
-              MÓDULO 02
-            </p>
-
-            <h2 className="text-2xl font-semibold mb-2">
-              Ambientar Producto
-            </h2>
-
-            <p className="text-neutral-500 text-sm leading-relaxed">
-              Insertar producto en ambientes editoriales.
-            </p>
-          </button>
+          {/* GENERATE BUTTON */}
+          {preview && (
+            <button
+              onClick={generateImage}
+              disabled={loading}
+              className="w-full mt-5 bg-black text-white rounded-[24px] py-5 font-medium flex items-center justify-center gap-3 active:scale-[0.99]"
+            >
+              {loading ? (
+                <>
+                  <LoaderCircle className="animate-spin" size={20} />
+                  Generando...
+                </>
+              ) : (
+                <>Generar ficha premium</>
+              )}
+            </button>
+          )}
 
         </div>
       </section>
+
+      {/* RESULT */}
+      {generated && (
+        <section className="px-6 mt-8">
+          <div className="bg-white rounded-[32px] p-4 shadow-sm">
+
+            <div className="mb-4">
+              <p className="text-sm tracking-[0.25em] text-neutral-400 mb-2">
+                RESULTADO
+              </p>
+
+              <h2 className="text-2xl font-semibold">
+                Generación IA
+              </h2>
+            </div>
+
+            <img
+              src={generated}
+              alt=""
+              className="w-full rounded-[24px]"
+            />
+
+          </div>
+        </section>
+      )}
 
       {/* BOTTOM NAV */}
       <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-md">
