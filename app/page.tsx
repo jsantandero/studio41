@@ -43,8 +43,10 @@ export default function HomePage() {
 
       const data = await response.json();
 
-      if (data.image) {
+      if (data.success && data.image) {
         setGenerated(`data:image/png;base64,${data.image}`);
+      } else {
+        alert(data.error || "Error generando imagen");
       }
 
     } catch (error) {
