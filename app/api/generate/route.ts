@@ -37,9 +37,7 @@ do not redesign the product
 
     const result = await openai.images.generate({
       model: "gpt-image-1",
-
       prompt,
-
       size: "1024x1024",
     });
 
@@ -56,48 +54,45 @@ do not redesign the product
 
     const fileName = `generated-${Date.now()}.png`;
 
-    const { error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("generated-images")
       .upload(fileName, buffer, {
         contentType: "image/png",
       });
 
-    if (error) {
-      throw error;
+    if (uploadError) {
+      throw uploadError;
     }
 
-    const { data } = supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from("generated-images")
       .getPublicUrl(fileName);
 
-    const imageUrl = data.publicUrl;
+    const imageUrl = publicUrlData.publicUrl;
 
-    const { data: project, error: projectError } =
+    const { error: projectError } =
       await supabase
         .from("projects")
         .insert({
           name: "Nuevo Proyecto",
           cover_image: body.image,
-        })
-        .select()
-        .single();
+        });
 
     if (projectError) {
-      throw projectError;
+      console.error(projectError);
     }
 
     const { error: generationError } =
       await supabase
         .from("generations")
         .insert({
-          project_id: project.id,
           type: "technical-sheet",
           image_url: imageUrl,
           prompt,
         });
 
     if (generationError) {
-      throw generationError;
+      console.error(generationError);
     }
 
     return NextResponse.json({
