@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { uploadImage } from "@/services/upload";
+
 import Hero from "@/components/home/Hero";
 import UploadCard from "@/components/home/UploadCard";
 import ResultPreview from "@/components/home/ResultPreview";
@@ -15,13 +17,19 @@ export default function HomePage() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [file, setFile] = useState<File | null>(null);
 
-    const file = e.target.files?.[0];
+  const handleImage = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
 
-    if (!file) return;
+    const selectedFile = e.target.files?.[0];
 
-    const imageUrl = URL.createObjectURL(file);
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+
+    const imageUrl = URL.createObjectURL(selectedFile);
 
     setPreview(imageUrl);
   };
@@ -30,7 +38,16 @@ export default function HomePage() {
 
     try {
 
+      if (!file) return;
+
       setLoading(true);
+
+      const uploadedImageUrl = await uploadImage(
+        file,
+        "product-originals"
+      );
+
+      console.log(uploadedImageUrl);
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -38,15 +55,20 @@ export default function HomePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          image: preview,
+          image: uploadedImageUrl,
         }),
       });
 
       const data = await response.json();
 
       if (data.success && data.image) {
-        setGenerated(`data:image/png;base64,${data.image}`);
+
+        setGenerated(
+          `data:image/png;base64,${data.image}`
+        );
+
       } else {
+
         alert(data.error || "Error generando imagen");
       }
 
