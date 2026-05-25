@@ -7,17 +7,24 @@ export async function uploadImage(
 
   const fileName = `${Date.now()}-${file.name}`;
 
-  const { error } = await supabase.storage
+  console.log("SUBIENDO:", fileName);
+
+  const { data, error } = await supabase.storage
     .from(bucket)
     .upload(fileName, file);
+
+  console.log("UPLOAD DATA:", data);
+  console.log("UPLOAD ERROR:", error);
 
   if (error) {
     throw error;
   }
 
-  const { data } = supabase.storage
+  const { data: publicUrlData } = supabase.storage
     .from(bucket)
     .getPublicUrl(fileName);
 
-  return data.publicUrl;
+  console.log("PUBLIC URL:", publicUrlData);
+
+  return publicUrlData.publicUrl;
 }
