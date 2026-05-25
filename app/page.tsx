@@ -3,10 +3,7 @@
 import { useState } from "react";
 
 import { uploadImage } from "@/services/upload";
-import {
-  createProject,
-  createGeneration,
-} from "@/services/projects";
+
 import Hero from "@/components/home/Hero";
 import UploadCard from "@/components/home/UploadCard";
 import ResultPreview from "@/components/home/ResultPreview";
@@ -49,10 +46,7 @@ export default function HomePage() {
         file,
         "product-originals"
       );
-      const project = await createProject(
-        file.name,
-        uploadedImageUrl
-      );
+
       console.log(uploadedImageUrl);
 
       const response = await fetch("/api/generate", {
@@ -72,11 +66,7 @@ export default function HomePage() {
         setGenerated(
           `data:image/png;base64,${data.image}`
         );
-        await createGeneration(
-          project.id,
-          data.imageUrl,
-          "technical sheet"
-        );
+
       } else {
 
         alert(data.error || "Error generando imagen");

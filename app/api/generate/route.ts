@@ -21,10 +21,7 @@ export async function POST(req: Request) {
 
     console.log(body.image);
 
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-
-      prompt: `
+    const prompt = `
 premium editorial furniture technical sheet,
 minimalist layout,
 architectural presentation,
@@ -36,7 +33,12 @@ preserve exact furniture geometry,
 maintain original proportions,
 keep original materials and structure,
 do not redesign the product
-      `,
+    `;
+
+    const result = await openai.images.generate({
+      model: "gpt-image-1",
+
+      prompt,
 
       size: "1024x1024",
     });
@@ -68,10 +70,40 @@ do not redesign the product
       .from("generated-images")
       .getPublicUrl(fileName);
 
+    const imageUrl = data.publicUrl;
+
+    const { data: project, error: projectError } =
+      await supabase
+        .from("projects")
+        .insert({
+          name: "Nuevo Proyecto",
+          cover_image: body.image,
+        })
+        .select()
+        .single();
+
+    if (projectError) {
+      throw projectError;
+    }
+
+    const { error: generationError } =
+      await supabase
+        .from("generations")
+        .insert({
+          project_id: project.id,
+          type: "technical-sheet",
+          image_url: imageUrl,
+          prompt,
+        });
+
+    if (generationError) {
+      throw generationError;
+    }
+
     return NextResponse.json({
       success: true,
       image: imageBase64,
-      imageUrl: data.publicUrl,
+      imageUrl,
     });
 
   } catch (error: any) {
