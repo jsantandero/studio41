@@ -1,32 +1,18 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
 
-import Image from "next/image";
+import ProjectCard from "@/components/dashboard/ProjectCard";
 
-const projects = [
-  {
-    id: 1,
-    name: "Comedor Nórdico",
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85",
-    date: "21 Mayo",
-  },
-  {
-    id: 2,
-    name: "Rack Industrial",
-    image:
-      "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e",
-    date: "21 Mayo",
-  },
-  {
-    id: 3,
-    name: "Mesa Atelier",
-    image:
-      "https://images.unsplash.com/photo-1484101403633-562f891dc89a",
-    date: "20 Mayo",
-  },
-];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   return (
 
@@ -37,6 +23,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between">
 
           <div>
+
             <p className="text-sm text-black/40">
               STUDIO41
             </p>
@@ -44,6 +31,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-semibold mt-1">
               Dashboard
             </h1>
+
           </div>
 
           <a
@@ -59,55 +47,36 @@ export default function DashboardPage() {
 
       <section className="max-w-7xl mx-auto px-6 py-10">
 
+        {!projects?.length && (
+
+          <div className="bg-white rounded-[28px] p-12 text-center border border-black/5">
+
+            <h2 className="text-2xl font-medium">
+              Aún no hay proyectos
+            </h2>
+
+            <p className="mt-3 text-black/50">
+              Genera tu primera ficha premium
+            </p>
+
+          </div>
+
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
 
-          {projects.map((project) => (
+          {projects?.map((project) => (
 
-            <div
+            <ProjectCard
               key={project.id}
-              className="bg-white rounded-[28px] overflow-hidden shadow-sm border border-black/5 hover:shadow-xl transition-all duration-300"
-            >
-
-              <div className="relative aspect-square">
-
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  fill
-                  className="object-cover"
-                />
-
-              </div>
-
-              <div className="p-6">
-
-                <div className="flex items-center justify-between">
-
-                  <h2 className="text-xl font-medium">
-                    {project.name}
-                  </h2>
-
-                  <span className="text-sm text-black/40">
-                    {project.date}
-                  </span>
-
-                </div>
-
-                <div className="mt-6 flex gap-3">
-
-                  <button className="flex-1 h-12 rounded-2xl bg-black text-white text-sm">
-                    Abrir
-                  </button>
-
-                  <button className="h-12 px-5 rounded-2xl border border-black/10 text-sm">
-                    Exportar
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
+              name={project.name || "Proyecto"}
+              image={project.cover_image}
+              date={
+                new Date(
+                  project.created_at
+                ).toLocaleDateString()
+              }
+            />
 
           ))}
 
